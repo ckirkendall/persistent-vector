@@ -76,9 +76,10 @@ PersistentVector.prototype = {
   },
   cons: function(val) {
     var i = this.cnt;
-    if((this.cnt - this.tailOff()) < 32) {
+    var tailIdx=(this.cnt - this.tailOff());
+    if(tailIdx < 32) {
       var newtail = objClone(this.tail);
-      newtail.push(val);
+      newtail[tailIdx];
       return new PersistentVector(this.cnt+1, this.shift, this.root, newtail);
     }
     var newroot,
