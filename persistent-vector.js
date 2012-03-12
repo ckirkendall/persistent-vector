@@ -1,4 +1,13 @@
-var EMPTY_NODE = new Array(32);
+var EMPTY_NODE = {};
+
+function objClone(obj){
+  var target={}
+	for ( name in obj ) {
+	   target[name]=obj[name];
+	}
+	return target;
+}
+
 
 function PersistentVector (cnt, shift, root, tail) {
   this.cnt = cnt;
@@ -41,7 +50,7 @@ PersistentVector.prototype = {
   assocN: function(i, val) {
     if(i >= 0 && i < this.cnt) {
       if(i >= this.tailOff()) {
-        newtail = this.tail.slice(0);
+        newtail = objClone(this.tail)
         newtail[i & 0x01f] = val;
         return new PersistentVector(this.cnt, this.shift, this.root, newtail);
       }
@@ -53,7 +62,7 @@ PersistentVector.prototype = {
     throw new Error("Index out of bounds!");
   },
   doAssoc: function(level, node, i, val) {
-    var ret = node.slice(0);
+    var ret = objClone(node);
     if(level === 0) {
       ret[i & 0x01f] = val;
     } else {
@@ -68,7 +77,7 @@ PersistentVector.prototype = {
   cons: function(val) {
     var i = this.cnt;
     if((this.cnt - this.tailOff()) < 32) {
-      var newtail = this.tail.slice(0);
+      var newtail = objClone(this.tail);
       newtail.push(val);
       return new PersistentVector(this.cnt+1, this.shift, this.root, newtail);
     }
@@ -76,7 +85,7 @@ PersistentVector.prototype = {
         tailnode = this.tail,
         newshift = this.shift;
     if((this.cnt >>> 5) > (1 << this.shift)) {
-      newroot = EMPTY_NODE.slice(0);
+      newroot = objClone(EMPTY_NODE);
       newroot[0] = this.root;
       newroot[1] = this.newPath(this.shift, tailnode);
       newshift += 5;
@@ -87,7 +96,7 @@ PersistentVector.prototype = {
   },
   pushTail: function(level, parent, tailnode) {
     var subidx = ((this.cnt-1) >>> level) & 0x01f,
-        ret = parent.slice(0),
+        ret = objClone(parent),
         nodeToInsert;
     if(level === 5) {
       nodeToInsert = tailnode;
@@ -103,7 +112,7 @@ PersistentVector.prototype = {
     if(level === 0) {
       return node;
     }
-    var ret = EMPTY_NODE.slice(0);
+    var ret = objClone(EMPTY_NODE);
     ret[0] = this.newPath(level-5, node);
     return ret;
   },
@@ -115,7 +124,7 @@ PersistentVector.prototype = {
       throw new Error("Can't pop empty vector");
     }
     if(this.cnt-this.tailOff() > 1) {
-      var newTail = this.tail.slice(0, this.tail.length-1);
+      var newTail = objClone(this.tail);
       return new PersistentVector(this.cnt-1, this.shift, this.root, newTail);
     }
     var newtail = this.arrayFor(cnt-2),
@@ -137,63 +146,17 @@ PersistentVector.prototype = {
       if(newchild == null && subidx == 0) {
         return null;
       } else {
-        var ret = node.slice(0);
+        var ret = objClone(node);
         return ret;
       }
     } else if(subidx === 0) {
       return null;
     } else {
-      var ret = this.node.slice(0);
+      var ret = objClone(this.node);
       array[subidx] = null;
       return ret;
     }
   }
 };
 
-var EMPTY = new PersistentVector(0, 5, EMPTY_NODE, []);
-
-/*
-function time(f) {
-  var start = new Date();
-  f();
-  console.log((new Date())-start);
-}
-
-time(function() {
-  for(var i = 0; i < 1e6; i++) {
-    new PersistentVector(0, 5, EMPTY_NODE, []);
-  }
-});
-
-var v = new PersistentVector(0, 5, EMPTY_NODE, []);
-
-time(function() {
-  for(var i = 0; i < 1000000; i++) {
-    v = v.cons(i);
-  }
-  for(var i = 0; i < 1000000; i++) {
-    v.nth_1(999999);
-  }
-});
-
-time(function() {
-  for(var i = 0; i < 1000000; i++) {
-    v.nth_1(999999);
-  }
-});
-
-v = v.cons("foo");
-console.log(v.nth_1(v.count()-1));
-
-var a = [];
-time(function() {
-  for(var i = 0; i < 1000000; i++) {
-    a.push(i);
-  }
-});
-time(function() {
-  for(var i = 0; i < 1000000; i++) {
-    a[999999];
-  }
-});
-*/
+var EMPTY = new PersistentVector(0, 5, EMPTY_NODE, {});
